@@ -69,18 +69,24 @@ async def db_signup(data: dict) -> dict:
     email = data.get("email")
     password = data.get("password")
     overlap_user = await collection_user.find_one({"email": email})
+    # バリデーション(email): 重複するユーザーがいないかの確認
     if overlap_user:
         raise HTTPException(status_code=400, detail='Email is already taken')
+    # バリデーション(password): 6文字以上あるかの確認 
     if not password or len(password) < 6:
         raise HTTPException(status_code=400, detail='Password too short')
+    # ユーザーをDBに保存
     user = await collection_user.insert_one({"email": email, "password": auth.generate_hashed_pw(password)})
+    # 保存したユーザーを取得
     new_user = await collection_user.find_one({"_id": user.inserted_id})
     return user_serializer(new_user)
 
 async def db_login(data: dict) -> str:
     email = data.get("email")
     password = data.get("password")
+    # 受け取ったemailに一致するユーザーをDBから取得
     user = await collection_user.find_one({"email": email})
+    # ユーザーが存在するか&パスワードが一致するかの確認
     if not user or not auth.verify_pw(password, user["password"]):
         raise HTTPException(status_code=401, detail='Invalid email or password')
     token = auth.encode_jwt(user['email'])

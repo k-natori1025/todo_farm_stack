@@ -12,15 +12,16 @@ class AuthJwtCsrf():
 
     def generate_hashed_pw(self, password) -> str:
         return self.pwd_ctx.hash(password)
-    
+    # plain_pw: ユーザーがインプットしたpassword, hashed_pw: DBに存在するハッシュ化されたpassword
     def verify_pw(self, plain_pw, hashed_pw) -> bool:
         return self.pwd_ctx.verify(plain_pw, hashed_pw)
     
+    # JWTの生成
     def encode_jwt(self, email) -> str:
         payload = {
-            'exp': datetime.utcnow() + timedelta(days=0, minutes=5),
-            'iat': datetime.utcnow(),
-            'sub': email
+            'exp': datetime.utcnow() + timedelta(days=0, minutes=10), # JWT　の有効時間
+            'iat': datetime.utcnow(), # 生成された日時
+            'sub': email # userを一意に識別する値（今回はメールアドレス）
         }
         return jwt.encode(
             payload,
